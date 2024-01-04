@@ -1,118 +1,209 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TextInput, TouchableOpacity } from 'react-native'
+import React, { useState } from 'react'
+import * as  Yup from 'yup' 
+import { Formik } from 'formik'
+import BouncyCheckbox from 'react-native-bouncy-checkbox'
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+const passwordSchema=Yup.object().shape({
+  passwordLength:Yup.number()
+  .min(4,'should be at least 4 characters')
+  .max(16,'should be at most 16 characters')
+  .required('This is a mandatory field')
+})
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+const App = () => {
+  const [password,setPassword] = useState('')
+  const [isPassGenerated,setIsPassGenerated] = useState(false)
+  const [lowerCase,setLowerCase] = useState(true)
+  const [upperCase,setUpperCase] = useState(false)
+  const [numbers,setNumbers] = useState(false)
+  const [symbols,setSymbols] = useState(false)
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+
+
+  const generatePasswordString=(passwordLength:number)=>{
+      let characterList='';
+      const upperCaseChars='ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+      const lowerCaseChars='abcdefghijklmnopqrstuvwxyz'
+      const digitChars='0123456789'
+      const specialChars='!@#$%^&*()_+'
+
+      if(upperCase){
+        characterList+=upperCaseChars
+      }
+      if(lowerCase){
+        characterList+=lowerCase
+      }
+      if(numbers){
+        characterList+=digitChars
+      }
+      if(symbols){
+        characterList+=specialChars 
+      }
+
+      const passwordResult=createPassword(characterList,passwordLength)
+      setPassword(passwordResult)
+      setIsPassGenerated(true)
+    }
+  const createPassword=(characters:string,passwordLength:number)=>{
+    let result=''
+   for(let i=0;i<passwordLength;i++){
+    const characterIndex=Math.round(Math.random()*characters.length)
+    result+=characters.charAt(characterIndex) 
+   }
+   return result
+  }
+  const resetPassword=()=>{
+    setPassword('')
+    setIsPassGenerated(false)
+    setLowerCase(true)
+    setUpperCase(false)
+
+
+  }
   return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+    <ScrollView keyboardShouldPersistTaps="handled">
+      <SafeAreaView>
+    <View style={styles.formContainer}>
+    <Text style={styles.title}>Password generator</Text>
+    <Formik
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+       initialValues={{ passwordLength:''}}
+ 
+       validationSchema={passwordSchema}
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+       onSubmit={values=>{
+        console.log(values)
+        generatePasswordString(+values.passwordLength)
+       }}
 
-  return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+     >
+
+       {({
+
+         values,
+
+         errors,
+
+         touched,
+         isValid,
+
+
+         handleChange,
+
+
+         handleSubmit,
+
+         handleReset,
+
+         /* and other goodies */
+
+       }) => (
+<>
+        <View style={styles.inputWrapper}>
+          <View style={styles.inputColumn}>
+            <Text>Password Length :</Text>
+            {touched.passwordLength && errors.passwordLength && (
+              <Text style={styles.errorText}> {errors.passwordLength} </Text>
+              )}
+       
+          </View>
+          <TextInput style={styles.inputStyle} value={values.passwordLength} onChangeText={handleChange('passwordLength')}
+       placeholder='Enter the length of password to be generated' keyboardType='numeric'
+        />
+          </View>
+        <View style={styles.inputWrapper}> 
+        <Text style={styles.title}>Include Lowercase</Text>
+        <BouncyCheckbox disableBuiltInState isChecked={lowerCase} fillColor='#29AB87' onPress={()=>{setLowerCase(!lowerCase)}}/>
         </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
+        <View style={styles.inputWrapper}> 
+        <Text style={styles.title}>Include Uppercase</Text>
+        <BouncyCheckbox disableBuiltInState isChecked={upperCase} fillColor='#DBCC26' onPress={()=>{setUpperCase(!upperCase)}}/>
+        </View>
+        <View style={styles.inputWrapper}> 
+        <Text style={styles.title}>Include Numbers</Text>
+        <BouncyCheckbox disableBuiltInState isChecked={numbers} fillColor='#3B39CA' onPress={()=>{setNumbers(!numbers)}}/>
+        </View>
+        <View style={styles.inputWrapper}> 
+        <Text style={styles.title}>Include Symbols</Text>
+        <BouncyCheckbox disableBuiltInState isChecked={symbols} fillColor='#AB2929' onPress={()=>{setSymbols(!symbols)}}/>
+        </View>
+       
+        <View style={styles.formActions}>
+          <TouchableOpacity disabled={!isValid} style={styles.primarybtn} onPress={()=>handleSubmit()} >
+            <Text>Generate Password</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.secondarybtn} onPress={()=>{
+            handleReset() ;
+            resetPassword()
+          }}>
+            <Text>Reset Password</Text>
+          </TouchableOpacity>
+           </View>
+
+
+        </>
+
+       )}
+
+     </Formik>
+        
+        <View>
+          {isPassGenerated ? (
+            <View>
+              <Text style={styles.title}>Result :</Text>
+              <Text selectable={true} style={styles.description}>Long press to copy</Text>
+              <Text style={styles.generatedPassword}>{password} </Text>
+            </View>
+
+):null}
+        </View>
+     
+    </View>
+      </SafeAreaView>
+    </ScrollView>
+    
+    )
 }
 
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
+const styles=StyleSheet.create({
+title:{
+  fontSize:20
+},
+formContainer:{
 
-export default App;
+},
+inputWrapper:{
+
+},
+inputColumn:{
+
+},
+inputStyle:{
+
+},
+formActions:{
+
+},
+errorText:{
+
+},
+primarybtn:{
+
+},
+secondarybtn:{
+
+},
+generatedPassword:{
+
+},
+description:{
+
+},
+
+
+}
+)
+
+export default App
